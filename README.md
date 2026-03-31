@@ -2,6 +2,8 @@
 
 A lightweight, fast markdown editor for Windows. Built with Tauri and SolidJS.
 
+![LightMD](docs/screenshot.png)
+
 ## Why
 
 VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are either Electron-bloated or lack WYSIWYG. LightMD is a portable, native-speed markdown editor that starts in under 500ms and ships as a single ~11 MB `.exe`.
