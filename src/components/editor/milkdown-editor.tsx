@@ -7,7 +7,9 @@ import { history } from "@milkdown/kit/plugin/history";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
 import { defaultMarkdown } from "../../lib/editor-config";
+import { mermaidCodeBlockPlugin } from "./mermaid-node-view";
 import "../../styles/editor-theme.css";
+import "../../styles/mermaid.css";
 
 interface MilkdownEditorProps {
   onContentChange?: (markdown: string) => void;
@@ -31,6 +33,7 @@ const MilkdownEditor: Component<MilkdownEditorProps> = (props) => {
         })
         .use(commonmark)
         .use(gfm)
+        .use(mermaidCodeBlockPlugin)
         .use(history)
         .use(clipboard)
         .use(listener)

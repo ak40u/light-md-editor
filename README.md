@@ -22,6 +22,7 @@ VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are 
 - **Keyboard shortcuts** -- standard editor shortcuts (Ctrl+S, Ctrl+O, Ctrl+N, Ctrl+B, Ctrl+I, etc.)
 - **Single instance mode** -- opening a second file focuses the running instance
 - **CommonMark + GFM** -- tables, task lists, strikethrough, code blocks
+- **Mermaid diagrams** -- live WYSIWYG preview for ` ```mermaid ` blocks with fullscreen, zoom/pan, and clipboard export (SVG/PNG)
 
 ## Tech Stack
 

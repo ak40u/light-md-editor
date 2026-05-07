@@ -7,6 +7,9 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig({
   plugins: [solid(), tailwindcss()],
   clearScreen: false,
+  optimizeDeps: {
+    exclude: ["mermaid"],
+  },
   server: {
     port: 1420,
     strictPort: true,
