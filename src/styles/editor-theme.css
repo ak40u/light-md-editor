@@ -6,7 +6,7 @@
   background: transparent;
   color: var(--on-surface);
   font-family: var(--font-body);
-  font-size: 15px;
+  font-size: inherit;
   line-height: 1.7;
 }
 

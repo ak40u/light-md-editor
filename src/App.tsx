@@ -22,6 +22,10 @@ import {
   sourceMode,
   setSourceMode,
   setRecentFiles,
+  editorFontSize,
+  zoomIn,
+  zoomOut,
+  zoomReset,
 } from "./stores/app-store";
 import { getRecentFiles } from "./lib/recent-files";
 import "./styles/layout.css";
@@ -176,6 +180,21 @@ const App: Component = () => {
       e.preventDefault();
       toggleSourceMode();
     }
+    // Ctrl/Cmd + + / = / - / 0 — editor zoom
+    // `=` is the unshifted key on US keyboards; treat it as `+` for convenience
+    const cmdOrCtrl = e.ctrlKey || e.metaKey;
+    if (cmdOrCtrl && (e.key === "+" || e.key === "=")) {
+      e.preventDefault();
+      zoomIn();
+    }
+    if (cmdOrCtrl && e.key === "-") {
+      e.preventDefault();
+      zoomOut();
+    }
+    if (cmdOrCtrl && e.key === "0") {
+      e.preventDefault();
+      zoomReset();
+    }
   };
 
   /** Toggle between WYSIWYG and raw markdown source */
@@ -252,7 +271,7 @@ const App: Component = () => {
       />
       <main class="main-area">
         <Toolbar editor={editor()} />
-        <div class="editor-area">
+        <div class="editor-area" style={{ "font-size": `${editorFontSize()}px` }}>
           <Show when={!sourceMode()} fallback={
             <textarea
               class="source-editor"
