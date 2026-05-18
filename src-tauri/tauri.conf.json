@@ -39,7 +39,9 @@
       {
         "ext": ["md", "markdown"],
         "mimeType": "text/markdown",
-        "description": "Markdown Document"
+        "description": "Markdown Document",
+        "name": "Markdown Document",
+        "role": "Editor"
       }
     ]
   }

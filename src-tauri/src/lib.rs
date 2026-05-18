@@ -57,8 +57,29 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS file-open via Apple Events (Finder double-click, `open` command, file association).
+            // Windows uses argv[1] (handled above at cold start) + single-instance plugin (handled for hot starts).
+            if let tauri::RunEvent::Opened { urls } = event {
+                for url in urls {
+                    if let Ok(path) = url.to_file_path() {
+                        if let Some(s) = path.to_str() {
+                            if is_markdown_file(s) {
+                                // Race-safe: stash for cold-start frontend query AND emit for live frontend.
+                                if let Ok(mut initial) = commands::INITIAL_FILE.lock() {
+                                    if initial.is_none() {
+                                        *initial = Some(s.to_string());
+                                    }
+                                }
+                                let _ = app_handle.emit("open-file", s.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        });
 }
 
 fn is_markdown_file(path: &str) -> bool {
