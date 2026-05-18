@@ -11,14 +11,13 @@ export async function openFileDialog(): Promise<{
   path: string;
   content: string;
 } | null> {
-  const selected = await open({
+  const path = await open({
     multiple: false,
     filters: MD_FILTERS,
   });
 
-  if (!selected) return null;
+  if (!path) return null;
 
-  const path = typeof selected === "string" ? selected : selected.path;
   const content = await invoke<string>("read_file", { path });
   return { path, content };
 }
