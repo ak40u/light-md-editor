@@ -9,6 +9,24 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 _Nothing yet._
 
+## [0.3.2] -- 2026-05-18
+
+### Fixed
+
+- **macOS Cmd shortcuts now work**. All keyboard shortcuts
+  (`Cmd+S`, `Cmd+O`, `Cmd+N`, `Cmd+R`, `Cmd+/`, `Cmd+\`) were
+  silently broken on macOS because the keydown handler only checked
+  `e.ctrlKey`. Switched to a single `cmdOrCtrl = e.ctrlKey || e.metaKey`
+  gate for every binding. Zoom shortcuts already used this pattern;
+  now everything else does too.
+
+### Build
+
+- macOS bundles are now ad-hoc code-signed with Hardened Runtime, so
+  `codesign --verify --strict` passes and the build is one step closer
+  to notarization-ready (creds via APPLE_ID / APPLE_TEAM_ID env vars
+  are all that's missing).
+
 ## [0.3.1] -- 2026-05-18
 
 ### Added
@@ -93,7 +111,8 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ak40u/light-md-editor/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ak40u/light-md-editor/compare/v0.1.0...v0.2.0

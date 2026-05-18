@@ -1,6 +1,6 @@
 {
   "name": "light-md-editor",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "description": "Lightweight WYSIWYG Markdown editor — Windows-first with macOS support. Built with Tauri, SolidJS, and Milkdown.",
   "license": "MIT",
