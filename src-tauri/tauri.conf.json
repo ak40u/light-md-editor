@@ -43,6 +43,10 @@
         "name": "Markdown Document",
         "role": "Editor"
       }
-    ]
+    ],
+    "macOS": {
+      "signingIdentity": "-",
+      "minimumSystemVersion": "10.15"
+    }
   }
 }
