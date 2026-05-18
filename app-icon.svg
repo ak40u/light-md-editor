@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bodyGradient" x1="0" y1="0" x2="0" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3E7BFF"/>
+      <stop offset="1" stop-color="#1F47C7"/>
+    </linearGradient>
+
+    <linearGradient id="highlight" x1="0" y1="100" x2="0" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- macOS squircle body: 824x824 centered, ~185px continuous radius -->
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#bodyGradient)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="url(#highlight)"/>
+  <rect x="100" y="100" width="824" height="824" rx="185" ry="185" fill="none"
+        stroke="#ffffff" stroke-opacity="0.10" stroke-width="2"/>
+
+  <!-- Markdown-style M + down arrow: clean, instantly readable -->
+  <g fill="#ffffff" transform="translate(512, 512)">
+    <path d="
+      M -228 -150
+      L -228 150
+      L -158 150
+      L -158 -8
+      L -78 100
+      L -8 100
+      L 72 -8
+      L 72 150
+      L 142 150
+      L 142 -150
+      L 72 -150
+      L -43 6
+      L -158 -150
+      Z
+    "/>
+    <path d="
+      M 178 -40
+      L 228 -40
+      L 228 75
+      L 268 75
+      L 203 150
+      L 138 75
+      L 178 75
+      Z
+    "/>
+  </g>
+</svg>
