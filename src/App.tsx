@@ -115,6 +115,26 @@ const App: Component = () => {
     }
   };
 
+  /** Reload current document from disk */
+  const handleReloadCurrentFile = async () => {
+    const path = currentFilePath();
+    if (!path) return;
+
+    try {
+      const content = await readFile(path);
+      if (!sourceMode()) {
+        const ed = editor();
+        if (ed) {
+          ed.action(replaceAll(content));
+        }
+      }
+      setCurrentContent(content);
+      setIsDirty(false);
+    } catch (err) {
+      console.error("Failed to reload file:", path, err);
+    }
+  };
+
   /** Refresh recent files list from backend */
   const refreshRecentFiles = async () => {
     try {
@@ -147,6 +167,10 @@ const App: Component = () => {
     if (e.ctrlKey && e.key === "n") {
       e.preventDefault();
       handleNewFile();
+    }
+    if (e.ctrlKey && e.key.toLowerCase() === "r") {
+      e.preventDefault();
+      handleReloadCurrentFile();
     }
     if (e.ctrlKey && e.key === "/") {
       e.preventDefault();
