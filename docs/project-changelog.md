@@ -7,12 +7,19 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.3.0] -- 2026-05-18
+
 ### Added
 
 - **Editor zoom**: `Ctrl/Cmd + +` (or `=`) and `Ctrl/Cmd + -` adjust the
   editor font size in 1px steps; `Ctrl/Cmd + 0` resets to default. Size
   clamps to 10-32 px and persists across sessions via localStorage.
   Both WYSIWYG and source modes share the same zoom level.
+- **New macOS-style app icon**: 824x824 squircle on a 1024 canvas with
+  a two-stop blue gradient and a Markdown-inspired wordmark (M with a
+  download arrow). Vector source kept as `app-icon.svg`.
 
 ### Fixed
 
@@ -75,6 +82,7 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/ak40u/light-md-editor/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ak40u/light-md-editor/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ak40u/light-md-editor/releases/tag/v0.1.0
