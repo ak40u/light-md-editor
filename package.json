@@ -1,16 +1,21 @@
 {
   "name": "light-md-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Lightweight WYSIWYG Markdown editor for Windows — built with Tauri, SolidJS, and Milkdown",
+  "description": "Lightweight WYSIWYG Markdown editor — Windows-first with macOS support. Built with Tauri, SolidJS, and Milkdown.",
   "license": "MIT",
-  "author": "pvolk",
+  "author": "Pavel Volkov <pvolkov@live.ru>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ak40u/light-md-editor.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@milkdown/kit": "^7.20.0",
