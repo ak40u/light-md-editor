@@ -43,7 +43,7 @@ const Sidebar: Component<SidebarProps> = (props) => {
         </div>
 
         {/* Recent files */}
-        <div class="sidebar-files">
+        <div class="sidebar-files" onContextMenu={(e) => e.preventDefault()}>
           <p class="sidebar-section-label">RECENT</p>
           <ul class="sidebar-file-list">
             <For each={filteredFiles()}>
