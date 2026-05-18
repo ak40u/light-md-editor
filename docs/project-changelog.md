@@ -9,6 +9,17 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 _Nothing yet._
 
+## [0.3.1] -- 2026-05-18
+
+### Added
+
+- **Open button in the sidebar footer**: dedicated button (folder
+  glyph) that triggers the native file dialog, paired with a
+  similarly-styled New button (plus glyph). Closes a discoverability
+  gap on first launch when the recent-files list is empty -- previously
+  the only ways to open a file were `Ctrl/Cmd+O`, drag-and-drop, or
+  clicking a Recent entry.
+
 ## [0.3.0] -- 2026-05-18
 
 ### Added
@@ -82,7 +93,8 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ak40u/light-md-editor/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/ak40u/light-md-editor/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/ak40u/light-md-editor/releases/tag/v0.1.0
