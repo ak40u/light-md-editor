@@ -1,6 +1,6 @@
 # LightMD
 
-A lightweight, fast markdown editor for Windows. Built with Tauri and SolidJS.
+A lightweight, fast markdown editor. Windows-first, with macOS support. Built with Tauri and SolidJS.
 
 ![LightMD](docs/screenshot.png)
 
@@ -15,7 +15,7 @@ VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are 
 - **Dark theme** -- "Fluent Obsidian" design, easy on the eyes
 - **Native file dialogs** -- open, save, save-as via OS-native dialogs
 - **Drag and drop** -- drop `.md` files onto the window to open them
-- **File association** -- registers `.md` and `.markdown` extensions on Windows
+- **File association** -- registers `.md` and `.markdown` extensions on Windows and macOS (Finder / `open` / Apple Events)
 - **Recent files sidebar** -- quick access to recently opened documents
 - **Formatting toolbar** -- headings, bold, italic, strikethrough, code, lists, tables, links, images
 - **Source mode** -- toggle between WYSIWYG and raw markdown with Ctrl+/
@@ -33,7 +33,7 @@ VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are 
 | Editor   | Milkdown 7 (ProseMirror)          |
 | Styling  | Tailwind CSS 4                    |
 | Backend  | Rust (file I/O, recent files, single instance) |
-| Webview  | WebView2 (Windows)                |
+| Webview  | WebView2 (Windows) / WKWebView (macOS) |
 
 ## Getting Started
 
@@ -41,7 +41,8 @@ VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are 
 
 - [Node.js](https://nodejs.org/) 18+
 - [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)
-- [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (pre-installed on Windows 10/11)
+- [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (pre-installed on Windows 10/11) — Windows builds only
+- Xcode Command Line Tools — macOS builds only
 
 ### Install
 
@@ -63,22 +64,35 @@ npm run tauri dev
 npm run tauri build
 ```
 
-The installer and portable `.exe` are output to `src-tauri/target/release/bundle/`.
+Build artefacts land in `src-tauri/target/release/bundle/` — `.exe` and `.msi` on Windows, `.app` and `.dmg` on macOS.
+
+### Platform notes
+
+| Platform | Binary size | File association | Drag & drop | Single instance |
+| -------- | ----------- | ---------------- | ----------- | --------------- |
+| Windows  | ~11 MB      | `.md`, `.markdown` | yes | yes |
+| macOS    | ~6 MB       | `.md`, `.markdown` via Finder / `open` / Apple Events | yes | yes |
+
+Linux is not officially supported yet — builds should work, but file
+association and DMG packaging are Windows/macOS-only.
 
 ## Keyboard Shortcuts
 
-| Shortcut         | Action              |
-| ---------------- | ------------------- |
-| `Ctrl + N`       | New file            |
-| `Ctrl + O`       | Open file           |
-| `Ctrl + S`       | Save file           |
-| `Ctrl + B`       | Bold                |
-| `Ctrl + I`       | Italic              |
-| `Ctrl + E`       | Inline code         |
-| `Ctrl + Z`       | Undo                |
-| `Ctrl + Shift+Z` | Redo                |
-| `Ctrl + /`       | Toggle source mode  |
-| `Ctrl + \`       | Toggle sidebar      |
+On macOS, `Cmd` substitutes for `Ctrl`.
+
+| Shortcut         | Action                          |
+| ---------------- | ------------------------------- |
+| `Ctrl + N`       | New file                        |
+| `Ctrl + O`       | Open file                       |
+| `Ctrl + S`       | Save file                       |
+| `Ctrl + R`       | Reload current file from disk   |
+| `Ctrl + B`       | Bold                            |
+| `Ctrl + I`       | Italic                          |
+| `Ctrl + E`       | Inline code                     |
+| `Ctrl + Z`       | Undo                            |
+| `Ctrl + Shift+Z` | Redo                            |
+| `Ctrl + /`       | Toggle source mode              |
+| `Ctrl + \`       | Toggle sidebar                  |
 
 ## Architecture
 
