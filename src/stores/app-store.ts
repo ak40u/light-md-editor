@@ -37,6 +37,7 @@ const [isDirty, setIsDirty] = createSignal(false);
 const [sidebarVisible, setSidebarVisible] = createSignal(true);
 const [sourceMode, setSourceMode] = createSignal(false);
 const [currentFilePath, setCurrentFilePath] = createSignal<string | null>(null);
+const [currentDraftId, setCurrentDraftId] = createSignal<string | null>(null);
 const [recentFiles, setRecentFiles] = createSignal<RecentFile[]>([]);
 const [editorFontSize, setEditorFontSize] = createSignal(loadInitialZoom());
 
@@ -71,6 +72,8 @@ export {
   setSidebarVisible,
   currentFilePath,
   setCurrentFilePath,
+  currentDraftId,
+  setCurrentDraftId,
   recentFiles,
   setRecentFiles,
   sourceMode,

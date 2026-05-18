@@ -17,6 +17,8 @@ import {
   setIsDirty,
   currentFilePath,
   setCurrentFilePath,
+  currentDraftId,
+  setCurrentDraftId,
   sidebarVisible,
   setSidebarVisible,
   sourceMode,
@@ -28,6 +30,7 @@ import {
   zoomReset,
 } from "./stores/app-store";
 import { getRecentFiles } from "./lib/recent-files";
+import { newDraftId, saveDraft, loadDraft, discardDraft, listDrafts } from "./lib/drafts";
 import "./styles/layout.css";
 
 const App: Component = () => {
@@ -58,6 +61,7 @@ const App: Component = () => {
       ed.action(replaceAll(newContent));
     }
     setCurrentFilePath(null);
+    setCurrentDraftId(newDraftId());
     setCurrentContent(newContent);
     setIsDirty(false);
   };
@@ -72,6 +76,7 @@ const App: Component = () => {
         ed.action(replaceAll(result.content));
       }
       setCurrentFilePath(result.path);
+      setCurrentDraftId(null);
       setCurrentContent(result.content);
       setIsDirty(false);
       const fileName = result.path.split(/[/\\]/).pop() || "untitled.md";
@@ -82,7 +87,7 @@ const App: Component = () => {
     }
   };
 
-  /** Save current document */
+  /** Persist content. If no path is known yet, prompt Save As. */
   const handleSave = async () => {
     try {
       const path = currentFilePath();
@@ -91,18 +96,32 @@ const App: Component = () => {
         await saveFile(path, content);
         setIsDirty(false);
       } else {
-        const newPath = await saveFileAs(content);
-        if (newPath) {
-          setCurrentFilePath(newPath);
-          setIsDirty(false);
-          const fileName = newPath.split(/[/\\]/).pop() || "untitled.md";
-          await addRecentFile(newPath, fileName);
-          await refreshRecentFiles();
-        }
-        // If user cancelled Save As, isDirty stays true
+        await handleSaveAs();
       }
     } catch (err) {
       console.error("Failed to save file:", err);
+    }
+  };
+
+  /** Always show the Save As dialog, regardless of whether a path is known. */
+  const handleSaveAs = async () => {
+    try {
+      const content = currentContent();
+      const newPath = await saveFileAs(content);
+      if (!newPath) return; // user cancelled
+      setCurrentFilePath(newPath);
+      setIsDirty(false);
+      // Promote draft -> real file: drop the auto-saved copy from app data dir.
+      const draftId = currentDraftId();
+      if (draftId) {
+        await discardDraft(draftId).catch(() => {});
+        setCurrentDraftId(null);
+      }
+      const fileName = newPath.split(/[/\\]/).pop() || "untitled.md";
+      await addRecentFile(newPath, fileName);
+      await refreshRecentFiles();
+    } catch (err) {
+      console.error("Failed to save file as:", err);
     }
   };
 
@@ -162,6 +181,11 @@ const App: Component = () => {
       e.preventDefault();
       setSidebarVisible(!sidebarVisible());
     }
+    if (cmdOrCtrl && e.shiftKey && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      handleSaveAs();
+      return;
+    }
     if (cmdOrCtrl && e.key.toLowerCase() === "s") {
       e.preventDefault();
       handleSave();
@@ -219,6 +243,7 @@ const App: Component = () => {
         ed.action(replaceAll(content));
       }
       setCurrentFilePath(path);
+      setCurrentDraftId(null);
       setCurrentContent(content);
       setIsDirty(false);
       const fileName = path.split(/[/\\]/).pop() || "untitled.md";
@@ -228,6 +253,41 @@ const App: Component = () => {
       console.error("Failed to load file:", path, err);
     }
   };
+
+  // -- Draft auto-save -----------------------------------------------------
+  // For untitled, in-progress documents (path === null) we persist the
+  // editor content to a session-keyed file under the app data dir on every
+  // change (debounced) so a crash / power loss / accidental quit won't lose
+  // the user's work. A real Save (As) discards the draft.
+  let draftSaveTimer: number | undefined;
+  const DRAFT_DEBOUNCE_MS = 1000;
+
+  createEffect(() => {
+    const content = currentContent();
+    const path = currentFilePath();
+
+    // Saved files don't need draft persistence
+    if (path) return;
+    if (!isDirty()) return;
+    if (!content.trim()) return;
+
+    // First edit of an untitled doc — allocate a draft id lazily
+    let draftId = currentDraftId();
+    if (!draftId) {
+      draftId = newDraftId();
+      setCurrentDraftId(draftId);
+    }
+
+    if (draftSaveTimer !== undefined) {
+      clearTimeout(draftSaveTimer);
+    }
+    const id = draftId;
+    draftSaveTimer = window.setTimeout(() => {
+      saveDraft(id, content).catch((err) => {
+        console.error("Failed to auto-save draft:", err);
+      });
+    }, DRAFT_DEBOUNCE_MS);
+  });
 
   let unlistenOpenFile: (() => void) | undefined;
 
@@ -244,18 +304,47 @@ const App: Component = () => {
 
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeydown);
+    if (draftSaveTimer !== undefined) clearTimeout(draftSaveTimer);
     unlistenOpenFile?.();
   });
+
+  /** If a draft exists from a prior session, restore the most recent one. */
+  const restoreLatestDraftIfAny = async () => {
+    try {
+      const drafts = await listDrafts();
+      if (drafts.length === 0) return;
+      const latest = drafts[0]; // backend returns newest first
+      const content = await loadDraft(latest.id);
+      if (!content.trim()) {
+        // Empty draft — discard quietly
+        await discardDraft(latest.id).catch(() => {});
+        return;
+      }
+      const ed = editor();
+      if (ed) {
+        ed.action(replaceAll(content));
+      }
+      setCurrentFilePath(null);
+      setCurrentDraftId(latest.id);
+      setCurrentContent(content);
+      setIsDirty(true);
+    } catch (err) {
+      console.error("Failed to restore drafts:", err);
+    }
+  };
 
   /** Called when Milkdown editor is fully initialized */
   const handleEditorReadyAndLoad = async (instance: Editor) => {
     setEditor(instance);
 
-    // Load file passed via CLI argument (double-click .md, command line)
+    // Load file passed via CLI argument (double-click .md, command line).
+    // If no CLI file, try restoring an in-progress draft from a prior session.
     try {
       const initialFile = await invoke<string | null>("get_initial_file");
       if (initialFile) {
         loadFileByPath(initialFile);
+      } else {
+        await restoreLatestDraftIfAny();
       }
     } catch {
       // Not running in Tauri (dev mode without backend)

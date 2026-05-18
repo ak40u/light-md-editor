@@ -33,6 +33,10 @@ pub fn run() {
             commands::add_recent_file,
             commands::get_initial_file,
             commands::remove_recent_file,
+            commands::save_draft,
+            commands::load_draft,
+            commands::discard_draft,
+            commands::list_drafts,
         ])
         .setup(|app| {
             let handle = app.handle().clone();

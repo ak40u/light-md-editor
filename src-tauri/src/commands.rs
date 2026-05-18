@@ -131,3 +131,109 @@ pub async fn remove_recent_file(app_handle: tauri::AppHandle, path: String) -> R
         .map_err(|e| format!("Failed to serialize recent files: {}", e))?;
     fs::write(&file_path, json).map_err(|e| format!("Failed to write recent files: {}", e))
 }
+
+// -- Drafts: auto-saved unsaved documents --------------------------------------
+//
+// The frontend generates a session id per untitled document. We store each
+// draft at `app_data_dir/drafts/{session_id}.md`. The frontend re-writes the
+// same file as the user types (debounced). On startup the frontend lists the
+// folder and may restore the latest draft. After the user does a real Save
+// (As) the frontend calls `discard_draft` to delete the file.
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct DraftEntry {
+    pub id: String,
+    pub last_modified: String,
+    pub preview: String,
+}
+
+fn drafts_dir(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
+    let data_dir = app_handle
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    let drafts = data_dir.join("drafts");
+    fs::create_dir_all(&drafts).map_err(|e| format!("Failed to create drafts dir: {}", e))?;
+    Ok(drafts)
+}
+
+/// Reject ids that could escape the drafts folder.
+fn validate_draft_id(id: &str) -> Result<(), String> {
+    if id.is_empty()
+        || id.len() > 128
+        || !id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err("Invalid draft id".into());
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn save_draft(
+    app_handle: tauri::AppHandle,
+    id: String,
+    content: String,
+) -> Result<(), String> {
+    validate_draft_id(&id)?;
+    let path = drafts_dir(&app_handle)?.join(format!("{}.md", id));
+    fs::write(&path, content).map_err(|e| format!("Failed to write draft: {}", e))
+}
+
+#[tauri::command]
+pub async fn load_draft(app_handle: tauri::AppHandle, id: String) -> Result<String, String> {
+    validate_draft_id(&id)?;
+    let path = drafts_dir(&app_handle)?.join(format!("{}.md", id));
+    fs::read_to_string(&path).map_err(|e| format!("Failed to read draft: {}", e))
+}
+
+#[tauri::command]
+pub async fn discard_draft(app_handle: tauri::AppHandle, id: String) -> Result<(), String> {
+    validate_draft_id(&id)?;
+    let path = drafts_dir(&app_handle)?.join(format!("{}.md", id));
+    if path.exists() {
+        fs::remove_file(&path).map_err(|e| format!("Failed to delete draft: {}", e))?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn list_drafts(app_handle: tauri::AppHandle) -> Result<Vec<DraftEntry>, String> {
+    let dir = drafts_dir(&app_handle)?;
+    let mut entries = Vec::new();
+    let read = fs::read_dir(&dir).map_err(|e| format!("Failed to list drafts: {}", e))?;
+    for entry in read.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|s| s.to_str()) != Some("md") {
+            continue;
+        }
+        let id = match path.file_stem().and_then(|s| s.to_str()) {
+            Some(s) => s.to_string(),
+            None => continue,
+        };
+        let metadata = match entry.metadata() {
+            Ok(m) => m,
+            Err(_) => continue,
+        };
+        let modified: chrono::DateTime<chrono::Utc> = match metadata.modified() {
+            Ok(t) => t.into(),
+            Err(_) => chrono::Utc::now(),
+        };
+        let preview = fs::read_to_string(&path)
+            .unwrap_or_default()
+            .lines()
+            .next()
+            .unwrap_or("")
+            .chars()
+            .take(80)
+            .collect();
+        entries.push(DraftEntry {
+            id,
+            last_modified: modified.to_rfc3339(),
+            preview,
+        });
+    }
+    entries.sort_by(|a, b| b.last_modified.cmp(&a.last_modified));
+    Ok(entries)
+}
