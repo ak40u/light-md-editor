@@ -93,6 +93,9 @@ On macOS, `Cmd` substitutes for `Ctrl`.
 | `Ctrl + Shift+Z` | Redo                            |
 | `Ctrl + /`       | Toggle source mode              |
 | `Ctrl + \`       | Toggle sidebar                  |
+| `Ctrl + +` / `=` | Zoom editor text in             |
+| `Ctrl + -`       | Zoom editor text out            |
+| `Ctrl + 0`       | Reset editor zoom               |
 
 ## Architecture
 

@@ -7,7 +7,18 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **Editor zoom**: `Ctrl/Cmd + +` (or `=`) and `Ctrl/Cmd + -` adjust the
+  editor font size in 1px steps; `Ctrl/Cmd + 0` resets to default. Size
+  clamps to 10-32 px and persists across sessions via localStorage.
+  Both WYSIWYG and source modes share the same zoom level.
+
+### Fixed
+
+- `openFileDialog` aligned with `@tauri-apps/plugin-dialog` v2.6.0 types
+  (the previous unreachable `selected.path` fallback broke
+  `tsc --noEmit`).
 
 ## [0.2.0] -- 2026-05-18
 
