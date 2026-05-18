@@ -156,33 +156,33 @@ const App: Component = () => {
   };
 
   const handleKeydown = (e: KeyboardEvent) => {
-    if (e.ctrlKey && e.key === "\\") {
+    // Treat Cmd (macOS) and Ctrl (Windows/Linux) interchangeably for app shortcuts.
+    const cmdOrCtrl = e.ctrlKey || e.metaKey;
+    if (cmdOrCtrl && e.key === "\\") {
       e.preventDefault();
       setSidebarVisible(!sidebarVisible());
     }
-    if (e.ctrlKey && e.key === "s") {
+    if (cmdOrCtrl && e.key.toLowerCase() === "s") {
       e.preventDefault();
       handleSave();
     }
-    if (e.ctrlKey && e.key === "o") {
+    if (cmdOrCtrl && e.key.toLowerCase() === "o") {
       e.preventDefault();
       handleOpenFile();
     }
-    if (e.ctrlKey && e.key === "n") {
+    if (cmdOrCtrl && e.key.toLowerCase() === "n") {
       e.preventDefault();
       handleNewFile();
     }
-    if (e.ctrlKey && e.key.toLowerCase() === "r") {
+    if (cmdOrCtrl && e.key.toLowerCase() === "r") {
       e.preventDefault();
       handleReloadCurrentFile();
     }
-    if (e.ctrlKey && e.key === "/") {
+    if (cmdOrCtrl && e.key === "/") {
       e.preventDefault();
       toggleSourceMode();
     }
-    // Ctrl/Cmd + + / = / - / 0 — editor zoom
     // `=` is the unshifted key on US keyboards; treat it as `+` for convenience
-    const cmdOrCtrl = e.ctrlKey || e.metaKey;
     if (cmdOrCtrl && (e.key === "+" || e.key === "=")) {
       e.preventDefault();
       zoomIn();
