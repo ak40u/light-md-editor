@@ -1,10 +1,14 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicegui-dev/nicegui-tauri/main/nicegui_tauri/capabilities-schema.json",
+  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Default permissions for LightMD",
   "windows": ["main"],
   "permissions": [
     "core:default",
-    "opener:default"
+    "core:window:allow-show",
+    "core:window:allow-set-title",
+    "opener:default",
+    "dialog:default",
+    "fs:default"
   ]
 }
