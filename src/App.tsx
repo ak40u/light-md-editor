@@ -267,6 +267,7 @@ const App: Component = () => {
       <Sidebar
         onNewFile={handleNewFile}
         onOpenFile={handleOpenRecentFile}
+        onOpenFileDialog={handleOpenFile}
         onRemoveRecent={handleRemoveRecent}
       />
       <main class="main-area">

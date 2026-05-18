@@ -161,10 +161,12 @@
 .sidebar-footer {
   padding: 12px;
   border-top: 1px solid var(--outline-variant);
+  display: flex;
+  gap: 8px;
 }
 
 .sidebar-btn {
-  width: 100%;
+  flex: 1;
   padding: 8px 12px;
   background: var(--surface-container);
   border: 1px solid var(--outline-variant);
@@ -174,6 +176,10 @@
   font-family: var(--font-body);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .sidebar-btn:hover {
