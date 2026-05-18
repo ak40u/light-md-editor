@@ -44,9 +44,14 @@ fn validate_file_path(path: &str) -> Result<PathBuf, String> {
         .or_else(|_| {
             // File may not exist yet (for write); validate parent instead
             if let Some(parent) = path_buf.parent() {
-                parent.canonicalize().map(|p| p.join(path_buf.file_name().unwrap_or_default()))
+                parent
+                    .canonicalize()
+                    .map(|p| p.join(path_buf.file_name().unwrap_or_default()))
             } else {
-                Err(std::io::Error::new(std::io::ErrorKind::InvalidInput, "invalid path"))
+                Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "invalid path",
+                ))
             }
         })
         .map_err(|e| format!("Invalid path '{}': {}", path, e))?;
@@ -58,8 +63,7 @@ fn recent_files_path(app_handle: &tauri::AppHandle) -> Result<PathBuf, String> {
         .path()
         .app_data_dir()
         .map_err(|e| format!("Failed to get app data dir: {}", e))?;
-    fs::create_dir_all(&data_dir)
-        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    fs::create_dir_all(&data_dir).map_err(|e| format!("Failed to create app data dir: {}", e))?;
     Ok(data_dir.join("recent-files.json"))
 }
 
@@ -71,10 +75,9 @@ pub async fn get_recent_files(
     if !path.exists() {
         return Ok(Vec::new());
     }
-    let data = fs::read_to_string(&path)
-        .map_err(|e| format!("Failed to read recent files: {}", e))?;
-    serde_json::from_str(&data)
-        .map_err(|e| format!("Failed to parse recent files: {}", e))
+    let data =
+        fs::read_to_string(&path).map_err(|e| format!("Failed to read recent files: {}", e))?;
+    serde_json::from_str(&data).map_err(|e| format!("Failed to parse recent files: {}", e))
 }
 
 #[tauri::command]
@@ -111,26 +114,20 @@ pub async fn add_recent_file(
 
     let json = serde_json::to_string_pretty(&entries)
         .map_err(|e| format!("Failed to serialize recent files: {}", e))?;
-    fs::write(&file_path, json)
-        .map_err(|e| format!("Failed to write recent files: {}", e))
+    fs::write(&file_path, json).map_err(|e| format!("Failed to write recent files: {}", e))
 }
 
 #[tauri::command]
-pub async fn remove_recent_file(
-    app_handle: tauri::AppHandle,
-    path: String,
-) -> Result<(), String> {
+pub async fn remove_recent_file(app_handle: tauri::AppHandle, path: String) -> Result<(), String> {
     let file_path = recent_files_path(&app_handle)?;
     if !file_path.exists() {
         return Ok(());
     }
     let data = fs::read_to_string(&file_path)
         .map_err(|e| format!("Failed to read recent files: {}", e))?;
-    let mut entries: Vec<RecentFileEntry> =
-        serde_json::from_str(&data).unwrap_or_default();
+    let mut entries: Vec<RecentFileEntry> = serde_json::from_str(&data).unwrap_or_default();
     entries.retain(|e| e.path != path);
     let json = serde_json::to_string_pretty(&entries)
         .map_err(|e| format!("Failed to serialize recent files: {}", e))?;
-    fs::write(&file_path, json)
-        .map_err(|e| format!("Failed to write recent files: {}", e))
+    fs::write(&file_path, json).map_err(|e| format!("Failed to write recent files: {}", e))
 }

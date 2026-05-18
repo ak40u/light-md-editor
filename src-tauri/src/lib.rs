@@ -39,8 +39,7 @@ pub fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 window.on_window_event(move |event| {
                     if let tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop {
-                        paths,
-                        ..
+                        paths, ..
                     }) = event
                     {
                         for path in paths {
@@ -59,27 +58,34 @@ pub fn run() {
         })
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
-        .run(|app_handle, event| {
-            // macOS file-open via Apple Events (Finder double-click, `open` command, file association).
-            // Windows uses argv[1] (handled above at cold start) + single-instance plugin (handled for hot starts).
-            if let tauri::RunEvent::Opened { urls } = event {
-                for url in urls {
-                    if let Ok(path) = url.to_file_path() {
-                        if let Some(s) = path.to_str() {
-                            if is_markdown_file(s) {
-                                // Race-safe: stash for cold-start frontend query AND emit for live frontend.
-                                if let Ok(mut initial) = commands::INITIAL_FILE.lock() {
-                                    if initial.is_none() {
-                                        *initial = Some(s.to_string());
-                                    }
-                                }
-                                let _ = app_handle.emit("open-file", s.to_string());
+        .run(|_app_handle, _event| {
+            // macOS uses Apple Events (Finder double-click, `open`, file association).
+            // Windows / Linux use argv[1] (cold start) + single-instance plugin (hot start) above.
+            #[cfg(target_os = "macos")]
+            handle_macos_open_event(_app_handle, _event);
+        });
+}
+
+/// Bridge `RunEvent::Opened` (macOS-only Apple Events) into the same frontend
+/// channels the rest of the app uses: stash for cold-start query, emit for hot.
+#[cfg(target_os = "macos")]
+fn handle_macos_open_event(app_handle: &tauri::AppHandle, event: tauri::RunEvent) {
+    if let tauri::RunEvent::Opened { urls } = event {
+        for url in urls {
+            if let Ok(path) = url.to_file_path() {
+                if let Some(s) = path.to_str() {
+                    if is_markdown_file(s) {
+                        if let Ok(mut initial) = commands::INITIAL_FILE.lock() {
+                            if initial.is_none() {
+                                *initial = Some(s.to_string());
                             }
                         }
+                        let _ = app_handle.emit("open-file", s.to_string());
                     }
                 }
             }
-        });
+        }
+    }
 }
 
 fn is_markdown_file(path: &str) -> bool {
