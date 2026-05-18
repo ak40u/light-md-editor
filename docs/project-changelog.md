@@ -11,6 +11,18 @@ _Nothing yet._
 
 ## [0.3.2] -- 2026-05-18
 
+### Added
+
+- **Auto-save drafts**. Untitled documents are debounced-persisted to
+  `app_data_dir/drafts/{session_id}.md` as you type (1s of idle).
+  On next launch the most recent draft is restored automatically.
+  A real Save (As) deletes the draft from disk. Crash, power loss,
+  accidental quit — no more lost work.
+- **Save As** (`Cmd/Ctrl+Shift+S`): always opens the save dialog
+  regardless of whether the document already has a path. Useful for
+  forking an opened file into a new one without overwriting the
+  original.
+
 ### Fixed
 
 - **macOS Cmd shortcuts now work**. All keyboard shortcuts

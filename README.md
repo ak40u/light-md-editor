@@ -23,6 +23,7 @@ VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are 
 - **Single instance mode** -- opening a second file focuses the running instance
 - **CommonMark + GFM** -- tables, task lists, strikethrough, code blocks
 - **Mermaid diagrams** -- live WYSIWYG preview for ` ```mermaid ` blocks with fullscreen, zoom/pan, and clipboard export (SVG/PNG)
+- **Auto-save drafts** -- untitled documents are persisted to the app data dir as you type; the most recent draft is restored on next launch
 
 ## Tech Stack
 
@@ -85,6 +86,7 @@ On macOS, `Cmd` substitutes for `Ctrl`.
 | `Ctrl + N`       | New file                        |
 | `Ctrl + O`       | Open file                       |
 | `Ctrl + S`       | Save file                       |
+| `Ctrl + Shift+S` | Save As (always prompts)        |
 | `Ctrl + R`       | Reload current file from disk   |
 | `Ctrl + B`       | Bold                            |
 | `Ctrl + I`       | Italic                          |
