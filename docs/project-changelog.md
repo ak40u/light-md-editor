@@ -9,6 +9,17 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 _Nothing yet._
 
+## [0.4.1] -- 2026-05-24
+
+### Changed
+
+- **Comfort dark theme**. Replaced the near-black dark palette with a
+  softer dark gray scheme for lower perceived glare during long writing
+  sessions.
+- Reduced contrast harshness for the app shell, editor surface,
+  sidebar, toolbar, borders, and Mermaid diagram colors while keeping
+  text contrast comfortably above WCAG AA thresholds.
+
 ## [0.4.0] -- 2026-05-24
 
 ### Added
@@ -166,7 +177,8 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/ak40u/light-md-editor/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ak40u/light-md-editor/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/ak40u/light-md-editor/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...v0.3.2
