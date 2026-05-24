@@ -9,6 +9,27 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 _Nothing yet._
 
+## [0.4.0] -- 2026-05-24
+
+### Added
+
+- **Automatic system theme**. LightMD now follows the operating system
+  light / dark appearance and updates the app while it is running.
+- **Light theme**. Added a full light palette for the app shell,
+  editor surface, source mode, toolbar, sidebar, status bar, and
+  Mermaid block UI.
+- **Theme-aware Mermaid rendering**. Mermaid diagrams now use matching
+  light / dark palettes and re-render when the system appearance
+  changes.
+
+### Changed
+
+- Replaced hard-coded editor and Mermaid colors with shared CSS theme
+  tokens.
+- Added an initial light / dark page background before the app mounts,
+  preventing a wrong-theme flash on startup.
+- Polished the public README and package metadata for the project page.
+
 ## [0.3.3] -- 2026-05-24
 
 ### Changed
@@ -145,7 +166,8 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.3...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/ak40u/light-md-editor/compare/v0.3.3...v0.4.0
 [0.3.3]: https://github.com/ak40u/light-md-editor/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...v0.3.1

@@ -1,4 +1,4 @@
-/* Milkdown / ProseMirror editor theme — Fluent Obsidian */
+/* Milkdown / ProseMirror editor theme */
 
 .milkdown {
   width: 100%;
@@ -108,7 +108,7 @@
 /* Blockquotes */
 .milkdown blockquote {
   border-left: 3px solid var(--primary);
-  background: rgba(164, 201, 255, 0.04);
+  background: var(--blockquote-bg);
   padding: 0.5em 1em;
   margin: 1em 0;
   color: var(--on-surface-variant);
@@ -172,7 +172,7 @@
 }
 
 .milkdown tr:nth-child(even) td {
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--table-row-alt);
 }
 
 /* Strikethrough */

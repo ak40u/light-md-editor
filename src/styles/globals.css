@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
-/* Fluent Obsidian Design Tokens */
+/* System theme tokens */
 :root {
+  color-scheme: dark;
   --surface: #0e0e0e;
   --surface-container: #191a1a;
   --surface-container-low: #131313;
@@ -16,9 +17,61 @@
   --outline-variant: #474848;
   --inverse-surface: #e6e5e5;
   --inverse-on-surface: #1f2020;
+  --blockquote-bg: rgba(164, 201, 255, 0.04);
+  --table-row-alt: rgba(255, 255, 255, 0.02);
+  --mermaid-surface: #1e1e2e;
+  --mermaid-surface-low: #181825;
+  --mermaid-surface-high: #313244;
+  --mermaid-border: #45475a;
+  --mermaid-text: #cdd6f4;
+  --mermaid-muted: #585b70;
+  --mermaid-accent: #89b4fa;
+  --mermaid-accent-hover: rgba(137, 180, 250, 0.12);
+  --mermaid-error: #f38ba8;
+  --mermaid-error-bg: rgba(243, 139, 168, 0.08);
+  --mermaid-success: #a6e3a1;
+  --mermaid-toast-text: #1e1e2e;
+  --mermaid-overlay: rgba(30, 30, 46, 0.96);
+  --mermaid-toolbar-bg: rgba(24, 24, 37, 0.9);
 
   --font-body: "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --surface: #f7f7f5;
+    --surface-container: #ffffff;
+    --surface-container-low: #f0f0ed;
+    --surface-container-high: #ececea;
+    --surface-container-highest: #dedfdd;
+    --on-surface: #1a1c1e;
+    --on-surface-variant: #5d6268;
+    --primary: #0b63c2;
+    --primary-container: #d8e8ff;
+    --on-primary-container: #06345f;
+    --outline: #74777c;
+    --outline-variant: #d7dadd;
+    --inverse-surface: #2f3032;
+    --inverse-on-surface: #f1f1ef;
+    --blockquote-bg: rgba(11, 99, 194, 0.07);
+    --table-row-alt: rgba(26, 28, 30, 0.025);
+    --mermaid-surface: #ffffff;
+    --mermaid-surface-low: #f2f5f8;
+    --mermaid-surface-high: #e6edf5;
+    --mermaid-border: #c5ced8;
+    --mermaid-text: #27323f;
+    --mermaid-muted: #697482;
+    --mermaid-accent: #0b63c2;
+    --mermaid-accent-hover: rgba(11, 99, 194, 0.1);
+    --mermaid-error: #ba1a1a;
+    --mermaid-error-bg: rgba(186, 26, 26, 0.08);
+    --mermaid-success: #2f7d32;
+    --mermaid-toast-text: #ffffff;
+    --mermaid-overlay: rgba(247, 247, 245, 0.96);
+    --mermaid-toolbar-bg: rgba(255, 255, 255, 0.92);
+  }
 }
 
 * {

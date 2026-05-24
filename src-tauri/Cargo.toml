@@ -1,7 +1,7 @@
 [package]
 name = "light-md-editor"
-version = "0.3.3"
-description = "Lightweight Markdown Editor — Windows-first with macOS support"
+version = "0.4.0"
+description = "Lightweight WYSIWYG Markdown editor for desktop"
 authors = ["Pavel Volkov <pvolkov@live.ru>"]
 edition = "2021"
 

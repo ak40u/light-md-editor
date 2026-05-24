@@ -12,6 +12,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from "solid-js";
 import { Portal } from "solid-js/web";
@@ -22,6 +23,7 @@ import {
   copyAsPng,
   getIntrinsicSize,
 } from "../../lib/mermaid";
+import { watchSystemTheme } from "../../lib/theme";
 
 export interface Disposed {
   v: boolean;
@@ -72,10 +74,12 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
     null,
   );
   const [fullscreenOpen, setFullscreenOpen] = createSignal(false);
+  const [themeVersion, setThemeVersion] = createSignal(0);
 
   let currentRunId = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let toastTimer: ReturnType<typeof setTimeout> | null = null;
+  let stopWatchingTheme: (() => void) | undefined;
   const [retryKey, setRetryKey] = createSignal(0);
 
   let inlineWrapperRef: HTMLDivElement | undefined;
@@ -172,7 +176,15 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
   createEffect(() => {
     const src = props.code();
     retryKey();
+    themeVersion();
     scheduleRender(src);
+  });
+
+  onMount(() => {
+    stopWatchingTheme = watchSystemTheme(() => {
+      __resetMermaidCache();
+      setThemeVersion((v) => v + 1);
+    });
   });
 
   // Inline preview: static SVG. CSS sizes it. No pan-zoom on inline.
@@ -224,6 +236,7 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
   onCleanup(() => {
     if (timer) clearTimeout(timer);
     if (toastTimer) clearTimeout(toastTimer);
+    stopWatchingTheme?.();
     window.removeEventListener("keydown", onKey);
     if (fullscreenPanZoom) {
       try {

@@ -1,7 +1,10 @@
 import { render } from "solid-js/web";
 import App from "./App";
+import { initSystemThemeSync } from "./lib/theme";
 import { getSafeCurrentWebviewWindow } from "./lib/tauri-window";
 import "./styles/globals.css";
+
+initSystemThemeSync();
 
 render(() => <App />, document.getElementById("root")!);
 

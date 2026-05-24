@@ -1,34 +1,54 @@
 // Mermaid integration foundation: singleton loader (with reject-retry +
 // timeout + epoch guard), config-lock, DOMPurify chokepoint, async render
-// mutex, hardcoded dark palette, clipboard export helpers.
+// mutex, system theme palettes, clipboard export helpers.
 
 import DOMPurify from "dompurify";
 import type { Mermaid, MermaidConfig } from "mermaid";
+import { getSystemTheme, type SystemTheme } from "./theme";
 
-const obsidianDark: Record<string, string> = {
-  background: "#1e1e2e",
-  primaryColor: "#313244",
-  primaryTextColor: "#cdd6f4",
-  primaryBorderColor: "#45475a",
-  lineColor: "#89b4fa",
-  textColor: "#cdd6f4",
-  mainBkg: "#313244",
-  secondaryColor: "#45475a",
-  tertiaryColor: "#585b70",
-  noteBkgColor: "#f9e2af",
-  noteTextColor: "#1e1e2e",
-  fontFamily: "-apple-system, 'Segoe UI', Roboto, sans-serif",
-  fontSize: "14px",
+const mermaidThemes: Record<SystemTheme, Record<string, string>> = {
+  dark: {
+    background: "#1e1e2e",
+    primaryColor: "#313244",
+    primaryTextColor: "#cdd6f4",
+    primaryBorderColor: "#45475a",
+    lineColor: "#89b4fa",
+    textColor: "#cdd6f4",
+    mainBkg: "#313244",
+    secondaryColor: "#45475a",
+    tertiaryColor: "#585b70",
+    noteBkgColor: "#f9e2af",
+    noteTextColor: "#1e1e2e",
+    fontFamily: "-apple-system, 'Segoe UI', Roboto, sans-serif",
+    fontSize: "14px",
+  },
+  light: {
+    background: "#ffffff",
+    primaryColor: "#e6edf5",
+    primaryTextColor: "#27323f",
+    primaryBorderColor: "#c5ced8",
+    lineColor: "#0b63c2",
+    textColor: "#27323f",
+    mainBkg: "#e6edf5",
+    secondaryColor: "#f2f5f8",
+    tertiaryColor: "#d8e8ff",
+    noteBkgColor: "#fff3cd",
+    noteTextColor: "#27323f",
+    fontFamily: "-apple-system, 'Segoe UI', Roboto, sans-serif",
+    fontSize: "14px",
+  },
 };
 
-function buildMermaidConfig(): MermaidConfig {
+function buildMermaidConfig(theme = getSystemTheme()): MermaidConfig {
+  const themeVariables = mermaidThemes[theme];
+
   return {
     startOnLoad: false,
     deterministicIds: true,
     securityLevel: "strict",
     secure: ["secure", "securityLevel", "startOnLoad", "deterministicIds"],
     theme: "base",
-    themeVariables: obsidianDark,
+    themeVariables,
     flowchart: {
       htmlLabels: false,
       curve: "basis",
@@ -36,28 +56,32 @@ function buildMermaidConfig(): MermaidConfig {
     sequence: {
       useMaxWidth: false,
     },
-    fontFamily: obsidianDark.fontFamily,
+    fontFamily: themeVariables.fontFamily,
   };
 }
 
 let cached: Promise<Mermaid> | null = null;
+let cachedTheme: SystemTheme | null = null;
 let loadEpoch = 0;
 
 const IMPORT_TIMEOUT_MS = 10_000;
 
 export function __resetMermaidCache(): void {
   cached = null;
+  cachedTheme = null;
   loadEpoch++;
 }
 
 export async function loadMermaid(): Promise<Mermaid> {
-  if (cached) return cached;
+  const theme = getSystemTheme();
+  if (cached && cachedTheme === theme) return cached;
 
   const epoch = ++loadEpoch;
+  cachedTheme = theme;
   const promise = Promise.race<Mermaid>([
     import("mermaid").then((m) => {
       const mermaid = m.default;
-      mermaid.initialize(buildMermaidConfig());
+      mermaid.initialize(buildMermaidConfig(theme));
       return mermaid as Mermaid;
     }),
     new Promise<Mermaid>((_, reject) =>
@@ -68,7 +92,10 @@ export async function loadMermaid(): Promise<Mermaid> {
     ),
   ]).catch((err) => {
     // Only clear cache if a newer load hasn't superseded us.
-    if (epoch === loadEpoch) cached = null;
+    if (epoch === loadEpoch) {
+      cached = null;
+      cachedTheme = null;
+    }
     throw err;
   });
 
