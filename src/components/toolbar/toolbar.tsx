@@ -1,31 +1,93 @@
 import type { Component, JSX } from "solid-js";
-import { callCommand } from "@milkdown/kit/utils";
-import {
-  toggleStrongCommand,
-  toggleEmphasisCommand,
-  toggleInlineCodeCommand,
-  toggleLinkCommand,
-  wrapInHeadingCommand,
-  wrapInBulletListCommand,
-  wrapInOrderedListCommand,
-  insertImageCommand,
-} from "@milkdown/kit/preset/commonmark";
-import {
-  toggleStrikethroughCommand,
-  insertTableCommand,
-} from "@milkdown/kit/preset/gfm";
 import type { Editor } from "@milkdown/kit/core";
 
 interface ToolbarProps {
   editor: Editor | undefined;
 }
 
+type ToolbarCommand =
+  | "heading1"
+  | "heading2"
+  | "bold"
+  | "italic"
+  | "strike"
+  | "inlineCode"
+  | "link"
+  | "bulletList"
+  | "orderedList"
+  | "image"
+  | "table";
+
 interface ToolbarButton {
   label: string | JSX.Element;
   title: string;
   className?: string;
-  action: (editor: Editor) => void;
+  command: ToolbarCommand;
 }
+
+type ToolbarCommandModules = {
+  callCommand: typeof import("@milkdown/kit/utils").callCommand;
+  commonmark: typeof import("@milkdown/kit/preset/commonmark");
+  gfm: typeof import("@milkdown/kit/preset/gfm");
+};
+
+let commandModulesPromise: Promise<ToolbarCommandModules> | undefined;
+
+const loadCommandModules = (): Promise<ToolbarCommandModules> => {
+  commandModulesPromise ??= Promise.all([
+    import("@milkdown/kit/utils"),
+    import("@milkdown/kit/preset/commonmark"),
+    import("@milkdown/kit/preset/gfm"),
+  ]).then(([utils, commonmark, gfm]) => ({
+    callCommand: utils.callCommand,
+    commonmark,
+    gfm,
+  }));
+  return commandModulesPromise;
+};
+
+const runToolbarCommand = async (
+  editor: Editor,
+  command: ToolbarCommand,
+): Promise<void> => {
+  const { callCommand, commonmark, gfm } = await loadCommandModules();
+
+  switch (command) {
+    case "heading1":
+      editor.action(callCommand(commonmark.wrapInHeadingCommand.key, 1));
+      break;
+    case "heading2":
+      editor.action(callCommand(commonmark.wrapInHeadingCommand.key, 2));
+      break;
+    case "bold":
+      editor.action(callCommand(commonmark.toggleStrongCommand.key));
+      break;
+    case "italic":
+      editor.action(callCommand(commonmark.toggleEmphasisCommand.key));
+      break;
+    case "strike":
+      editor.action(callCommand(gfm.toggleStrikethroughCommand.key));
+      break;
+    case "inlineCode":
+      editor.action(callCommand(commonmark.toggleInlineCodeCommand.key));
+      break;
+    case "link":
+      editor.action(callCommand(commonmark.toggleLinkCommand.key, { href: "" }));
+      break;
+    case "bulletList":
+      editor.action(callCommand(commonmark.wrapInBulletListCommand.key));
+      break;
+    case "orderedList":
+      editor.action(callCommand(commonmark.wrapInOrderedListCommand.key));
+      break;
+    case "image":
+      editor.action(callCommand(commonmark.insertImageCommand.key, { src: "", alt: "image" }));
+      break;
+    case "table":
+      editor.action(callCommand(gfm.insertTableCommand.key, { row: 3, col: 3 }));
+      break;
+  }
+};
 
 const LinkIcon = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -85,68 +147,68 @@ const toolbarButtons: ToolbarButton[] = [
   {
     label: "H1",
     title: "Heading 1",
-    action: (e) => e.action(callCommand(wrapInHeadingCommand.key, 1)),
+    command: "heading1",
   },
   {
     label: "H2",
     title: "Heading 2",
-    action: (e) => e.action(callCommand(wrapInHeadingCommand.key, 2)),
+    command: "heading2",
   },
   {
     label: "B",
     title: "Bold (Ctrl+B)",
     className: "toolbar-btn--bold",
-    action: (e) => e.action(callCommand(toggleStrongCommand.key)),
+    command: "bold",
   },
   {
     label: "I",
     title: "Italic (Ctrl+I)",
     className: "toolbar-btn--italic",
-    action: (e) => e.action(callCommand(toggleEmphasisCommand.key)),
+    command: "italic",
   },
   {
     label: "S",
     title: "Strikethrough",
     className: "toolbar-btn--strike",
-    action: (e) => e.action(callCommand(toggleStrikethroughCommand.key)),
+    command: "strike",
   },
   {
     label: <CodeBlockIcon />,
     title: "Code (Ctrl+E)",
-    action: (e) => e.action(callCommand(toggleInlineCodeCommand.key)),
+    command: "inlineCode",
   },
   {
     label: <LinkIcon />,
     title: "Link (Ctrl+K)",
-    action: (e) => e.action(callCommand(toggleLinkCommand.key, { href: "" })),
+    command: "link",
   },
   {
     label: <ListIcon />,
     title: "Bullet List",
-    action: (e) => e.action(callCommand(wrapInBulletListCommand.key)),
+    command: "bulletList",
   },
   {
     label: <OrderedListIcon />,
     title: "Numbered List",
-    action: (e) => e.action(callCommand(wrapInOrderedListCommand.key)),
+    command: "orderedList",
   },
   {
     label: <ImageIcon />,
     title: "Image",
-    action: (e) => e.action(callCommand(insertImageCommand.key, { src: "", alt: "image" })),
+    command: "image",
   },
   {
     label: <TableIcon />,
     title: "Table",
-    action: (e) => e.action(callCommand(insertTableCommand.key, { row: 3, col: 3 })),
+    command: "table",
   },
 ];
 
 const Toolbar: Component<ToolbarProps> = (props) => {
-  const handleClick = (btn: ToolbarButton) => {
+  const handleClick = async (btn: ToolbarButton) => {
     if (!props.editor) return;
     try {
-      btn.action(props.editor);
+      await runToolbarCommand(props.editor, btn.command);
     } catch {
       // Command may not apply to current selection
     }
@@ -159,9 +221,10 @@ const Toolbar: Component<ToolbarProps> = (props) => {
           class={`toolbar-btn ${btn.className || ""}`}
           title={btn.title}
           type="button"
+          disabled={!props.editor}
           onMouseDown={(e) => {
             e.preventDefault();
-            handleClick(btn);
+            void handleClick(btn);
           }}
         >
           {btn.label}

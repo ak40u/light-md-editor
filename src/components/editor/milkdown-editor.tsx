@@ -6,7 +6,6 @@ import { gfm } from "@milkdown/kit/preset/gfm";
 import { history } from "@milkdown/kit/plugin/history";
 import { clipboard } from "@milkdown/kit/plugin/clipboard";
 import { listener, listenerCtx } from "@milkdown/kit/plugin/listener";
-import { defaultMarkdown } from "../../lib/editor-config";
 import { mermaidCodeBlockPlugin } from "./mermaid-node-view";
 import "../../styles/editor-theme.css";
 import "../../styles/mermaid.css";
@@ -14,6 +13,7 @@ import "../../styles/mermaid.css";
 interface MilkdownEditorProps {
   onContentChange?: (markdown: string) => void;
   onEditorReady?: (editor: Editor) => void;
+  onEditorDispose?: (editor: Editor) => void;
   initialContent?: string;
 }
 
@@ -26,7 +26,7 @@ const MilkdownEditor: Component<MilkdownEditorProps> = (props) => {
       const editor = await Editor.make()
         .config((ctx) => {
           ctx.set(rootCtx, containerRef);
-          ctx.set(defaultValueCtx, props.initialContent ?? defaultMarkdown);
+          ctx.set(defaultValueCtx, props.initialContent ?? "");
           ctx.get(listenerCtx).markdownUpdated((_ctx, markdown) => {
             props.onContentChange?.(markdown);
           });
@@ -47,7 +47,10 @@ const MilkdownEditor: Component<MilkdownEditorProps> = (props) => {
   });
 
   onCleanup(() => {
-    editorInstance?.destroy();
+    if (!editorInstance) return;
+    props.onEditorDispose?.(editorInstance);
+    editorInstance.destroy();
+    editorInstance = undefined;
   });
 
   return (

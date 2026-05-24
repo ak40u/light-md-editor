@@ -195,9 +195,14 @@
   border-radius: 4px;
 }
 
-/* Placeholder text (first child empty paragraph) */
-.milkdown .editor > .paragraph:first-child:last-child:empty::before {
+/* Placeholder text (first empty paragraph in a blank document) */
+.milkdown .editor > .paragraph:first-child:last-child:empty::before,
+.milkdown .editor > .paragraph:first-child:last-child:has(> br.ProseMirror-trailingBreak)::before,
+.milkdown .editor > p:first-child:last-child:empty::before,
+.milkdown .editor > p:first-child:last-child:has(> br.ProseMirror-trailingBreak)::before {
   content: "Start writing...";
+  float: left;
+  height: 0;
   color: var(--on-surface-variant);
   opacity: 0.5;
   pointer-events: none;

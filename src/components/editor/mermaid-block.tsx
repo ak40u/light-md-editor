@@ -15,7 +15,6 @@ import {
   Show,
 } from "solid-js";
 import { Portal } from "solid-js/web";
-import svgPanZoom from "svg-pan-zoom";
 import {
   renderMermaidSafe,
   __resetMermaidCache,
@@ -35,6 +34,18 @@ export interface MermaidBlockProps {
 
 type RenderState = "idle" | "loading" | "ok" | "err" | "loader-err";
 type ToastKind = "ok" | "err";
+type SvgPanZoomFactory = typeof import("svg-pan-zoom");
+type SvgPanZoomInstance = ReturnType<SvgPanZoomFactory>;
+
+let svgPanZoomPromise: Promise<SvgPanZoomFactory> | undefined;
+
+const loadSvgPanZoom = (): Promise<SvgPanZoomFactory> => {
+  svgPanZoomPromise ??= import("svg-pan-zoom").then((mod) => {
+    const loaded = mod as unknown as { default?: SvgPanZoomFactory } & SvgPanZoomFactory;
+    return loaded.default ?? loaded;
+  });
+  return svgPanZoomPromise;
+};
 
 const DEBOUNCE_MS = 300;
 const TOAST_MS = 3000;
@@ -69,7 +80,7 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
 
   let inlineWrapperRef: HTMLDivElement | undefined;
   let fullscreenWrapperRef: HTMLDivElement | undefined;
-  let fullscreenPanZoom: ReturnType<typeof svgPanZoom> | null = null;
+  let fullscreenPanZoom: SvgPanZoomInstance | null = null;
 
   const showToast = (kind: ToastKind, msg: string): void => {
     setToast({ kind, msg });
@@ -98,7 +109,7 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
     return newSvg as unknown as SVGSVGElement;
   };
 
-  const initFullscreenPanZoom = (svgEl: SVGSVGElement): void => {
+  const initFullscreenPanZoom = async (svgEl: SVGSVGElement): Promise<void> => {
     if (fullscreenPanZoom) {
       try {
         fullscreenPanZoom.destroy();
@@ -108,6 +119,8 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
       fullscreenPanZoom = null;
     }
     try {
+      const svgPanZoom = await loadSvgPanZoom();
+      if (!fullscreenOpen() || props.disposed.v) return;
       fullscreenPanZoom = svgPanZoom(svgEl, {
         zoomEnabled: true,
         panEnabled: true,
@@ -179,7 +192,9 @@ const MermaidBlock: Component<MermaidBlockProps> = (props) => {
     if (!s) return;
     requestAnimationFrame(() => {
       const el = mountSvgInto(fullscreenWrapperRef, s);
-      if (el) initFullscreenPanZoom(el);
+      if (el) {
+        void initFullscreenPanZoom(el);
+      }
     });
   });
 

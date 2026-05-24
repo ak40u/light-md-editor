@@ -9,6 +9,28 @@ versions adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 _Nothing yet._
 
+## [0.3.3] -- 2026-05-24
+
+### Changed
+
+- **Faster cold start**. The first UI shell now renders before the
+  Milkdown / ProseMirror editor stack is loaded. Toolbar commands,
+  editor replacement helpers, and Mermaid fullscreen pan/zoom are
+  loaded lazily.
+- **Blank new documents**. New documents are truly empty; the previous
+  welcome / untitled starter markdown has been replaced by a visual
+  placeholder.
+
+### Fixed
+
+- Clicking **New** now focuses the editor after clearing the document,
+  so the caret stays in the empty editor instead of appearing above the
+  placeholder area or leaving focus on the button.
+- Programmatic editor resets no longer mark a fresh empty document as
+  dirty.
+- Browser-only development mode no longer throws Tauri bridge errors
+  while rendering the app shell.
+
 ## [0.3.2] -- 2026-05-18
 
 ### Added
@@ -123,7 +145,8 @@ Initial release.
 - Dynamic window title with dirty-state indicator.
 - CSP configured, path validation on file operations.
 
-[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/ak40u/light-md-editor/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/ak40u/light-md-editor/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/ak40u/light-md-editor/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/ak40u/light-md-editor/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/ak40u/light-md-editor/compare/v0.2.0...v0.3.0

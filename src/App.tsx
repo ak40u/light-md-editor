@@ -1,10 +1,16 @@
-import { Component, Show, createSignal, createEffect, onMount, onCleanup } from "solid-js";
+import {
+  Component,
+  Show,
+  Suspense,
+  createSignal,
+  createEffect,
+  lazy,
+  onMount,
+  onCleanup,
+} from "solid-js";
 import type { Editor } from "@milkdown/kit/core";
-import { replaceAll } from "@milkdown/kit/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
-import MilkdownEditor from "./components/editor/milkdown-editor";
 import Sidebar from "./components/sidebar/sidebar";
 import Toolbar from "./components/toolbar/toolbar";
 import StatusBar from "./components/status-bar/status-bar";
@@ -31,10 +37,32 @@ import {
 } from "./stores/app-store";
 import { getRecentFiles } from "./lib/recent-files";
 import { newDraftId, saveDraft, loadDraft, discardDraft, listDrafts } from "./lib/drafts";
+import { getSafeCurrentWebviewWindow } from "./lib/tauri-window";
 import "./styles/layout.css";
+
+const MilkdownEditor = lazy(() => import("./components/editor/milkdown-editor"));
+
+type ReplaceAll = typeof import("@milkdown/kit/utils").replaceAll;
+type EditorViewCtx = typeof import("@milkdown/kit/core").editorViewCtx;
+let replaceAllPromise: Promise<ReplaceAll> | undefined;
+let editorViewCtxPromise: Promise<EditorViewCtx> | undefined;
+
+const loadReplaceAll = (): Promise<ReplaceAll> => {
+  replaceAllPromise ??= import("@milkdown/kit/utils").then((mod) => mod.replaceAll);
+  return replaceAllPromise;
+};
+
+const loadEditorViewCtx = (): Promise<EditorViewCtx> => {
+  editorViewCtxPromise ??= import("@milkdown/kit/core").then((mod) => mod.editorViewCtx);
+  return editorViewCtxPromise;
+};
 
 const App: Component = () => {
   const [editor, setEditor] = createSignal<Editor | undefined>();
+  let startupDocumentLoad: Promise<void> | undefined;
+  let pendingEditorContent: string | undefined;
+  let expectedProgrammaticContent: string | undefined;
+  let expectedProgrammaticContentTimer: number | undefined;
 
   // Update window title when file path or dirty state changes
   createEffect(() => {
@@ -42,28 +70,86 @@ const App: Component = () => {
     const dirty = isDirty();
     const fileName = path ? path.split(/[/\\]/).pop() : "Untitled";
     const title = `${dirty ? "* " : ""}${fileName} — LightMD`;
-    getCurrentWebviewWindow().setTitle(title).catch(() => {
+    const currentWindow = getSafeCurrentWebviewWindow();
+    if (!currentWindow) {
+      document.title = title;
+      return;
+    }
+    currentWindow.setTitle(title).catch(() => {
       document.title = title;
     });
   });
 
   const handleContentChange = (markdown: string) => {
     setCurrentContent(markdown);
+    if (expectedProgrammaticContent === markdown) {
+      expectedProgrammaticContent = undefined;
+      if (expectedProgrammaticContentTimer !== undefined) {
+        clearTimeout(expectedProgrammaticContentTimer);
+        expectedProgrammaticContentTimer = undefined;
+      }
+      return;
+    }
     setIsDirty(true);
   };
 
-  const handleEditorReady = (instance: Editor) => handleEditorReadyAndLoad(instance);
-
-  const handleNewFile = () => {
-    const newContent = "# Untitled\n\nStart writing...\n";
-    const ed = editor();
-    if (ed) {
-      ed.action(replaceAll(newContent));
+  const replaceEditorContent = async (
+    markdown: string,
+    instance = editor(),
+  ): Promise<void> => {
+    if (!instance) {
+      pendingEditorContent = markdown;
+      return;
     }
+    const replaceAll = await loadReplaceAll();
+    if (instance !== editor()) return;
+    expectedProgrammaticContent = markdown;
+    if (expectedProgrammaticContentTimer !== undefined) {
+      clearTimeout(expectedProgrammaticContentTimer);
+    }
+    expectedProgrammaticContentTimer = window.setTimeout(() => {
+      if (expectedProgrammaticContent === markdown) {
+        expectedProgrammaticContent = undefined;
+      }
+      expectedProgrammaticContentTimer = undefined;
+    }, 1500);
+    instance.action(replaceAll(markdown));
+  };
+
+  const focusEditor = async (instance = editor()): Promise<void> => {
+    if (!instance) return;
+    const editorViewCtx = await loadEditorViewCtx();
+    if (instance !== editor()) return;
+    instance.action((ctx) => {
+      ctx.get(editorViewCtx).focus();
+    });
+  };
+
+  const handleEditorReady = (instance: Editor) => {
+    setEditor(instance);
+    if (pendingEditorContent !== undefined) {
+      const content = pendingEditorContent;
+      const dirty = isDirty();
+      pendingEditorContent = undefined;
+      replaceEditorContent(content, instance)
+        .then(() => setIsDirty(dirty))
+        .catch((err) => console.error("Failed to hydrate editor:", err));
+    }
+  };
+
+  const handleEditorDispose = (instance: Editor) => {
+    if (editor() === instance) {
+      setEditor(undefined);
+    }
+  };
+
+  const handleNewFile = async () => {
     setCurrentFilePath(null);
-    setCurrentDraftId(newDraftId());
-    setCurrentContent(newContent);
+    setCurrentDraftId(null);
+    setCurrentContent("");
+    await replaceEditorContent("");
     setIsDirty(false);
+    await focusEditor();
   };
 
   /** Open file via native dialog */
@@ -71,13 +157,10 @@ const App: Component = () => {
     try {
       const result = await openFileDialog();
       if (!result) return;
-      const ed = editor();
-      if (ed) {
-        ed.action(replaceAll(result.content));
-      }
       setCurrentFilePath(result.path);
       setCurrentDraftId(null);
       setCurrentContent(result.content);
+      await replaceEditorContent(result.content);
       setIsDirty(false);
       const fileName = result.path.split(/[/\\]/).pop() || "untitled.md";
       await addRecentFile(result.path, fileName);
@@ -145,13 +228,10 @@ const App: Component = () => {
 
     try {
       const content = await readFile(path);
-      if (!sourceMode()) {
-        const ed = editor();
-        if (ed) {
-          ed.action(replaceAll(content));
-        }
-      }
       setCurrentContent(content);
+      if (!sourceMode()) {
+        await replaceEditorContent(content);
+      }
       setIsDirty(false);
     } catch (err) {
       console.error("Failed to reload file:", path, err);
@@ -223,28 +303,17 @@ const App: Component = () => {
 
   /** Toggle between WYSIWYG and raw markdown source */
   const toggleSourceMode = () => {
-    const entering = !sourceMode();
-    if (!entering) {
-      // Returning to WYSIWYG — push textarea content into Milkdown
-      const ed = editor();
-      if (ed) {
-        ed.action(replaceAll(currentContent()));
-      }
-    }
-    setSourceMode(entering);
+    setSourceMode(!sourceMode());
   };
 
   /** Load file by path (from CLI arg, drag-drop, or file association) */
   const loadFileByPath = async (path: string) => {
     try {
       const content = await readFile(path);
-      const ed = editor();
-      if (ed) {
-        ed.action(replaceAll(content));
-      }
       setCurrentFilePath(path);
       setCurrentDraftId(null);
       setCurrentContent(content);
+      await replaceEditorContent(content);
       setIsDirty(false);
       const fileName = path.split(/[/\\]/).pop() || "untitled.md";
       await addRecentFile(path, fileName);
@@ -265,6 +334,9 @@ const App: Component = () => {
   createEffect(() => {
     const content = currentContent();
     const path = currentFilePath();
+
+    // Browser-only dev shell has no native app data dir or IPC draft bridge.
+    if (!getSafeCurrentWebviewWindow()) return;
 
     // Saved files don't need draft persistence
     if (path) return;
@@ -294,17 +366,27 @@ const App: Component = () => {
   onMount(async () => {
     document.addEventListener("keydown", handleKeydown);
     refreshRecentFiles();
+    loadStartupDocument();
 
     // Listen for "open-file" events from Tauri backend
     // (drag & drop, second instance with file arg)
-    unlistenOpenFile = await listen<string>("open-file", (event) => {
-      loadFileByPath(event.payload);
-    });
+    if (getSafeCurrentWebviewWindow()) {
+      try {
+        unlistenOpenFile = await listen<string>("open-file", (event) => {
+          loadFileByPath(event.payload);
+        });
+      } catch {
+        // Native app event bridge is unavailable in the browser-only dev shell.
+      }
+    }
   });
 
   onCleanup(() => {
     document.removeEventListener("keydown", handleKeydown);
     if (draftSaveTimer !== undefined) clearTimeout(draftSaveTimer);
+    if (expectedProgrammaticContentTimer !== undefined) {
+      clearTimeout(expectedProgrammaticContentTimer);
+    }
     unlistenOpenFile?.();
   });
 
@@ -320,29 +402,28 @@ const App: Component = () => {
         await discardDraft(latest.id).catch(() => {});
         return;
       }
-      const ed = editor();
-      if (ed) {
-        ed.action(replaceAll(content));
-      }
       setCurrentFilePath(null);
       setCurrentDraftId(latest.id);
       setCurrentContent(content);
+      await replaceEditorContent(content);
       setIsDirty(true);
     } catch (err) {
       console.error("Failed to restore drafts:", err);
     }
   };
 
-  /** Called when Milkdown editor is fully initialized */
-  const handleEditorReadyAndLoad = async (instance: Editor) => {
-    setEditor(instance);
+  const loadStartupDocument = () => {
+    startupDocumentLoad ??= loadStartupDocumentOnce();
+    return startupDocumentLoad;
+  };
 
+  const loadStartupDocumentOnce = async () => {
     // Load file passed via CLI argument (double-click .md, command line).
     // If no CLI file, try restoring an in-progress draft from a prior session.
     try {
       const initialFile = await invoke<string | null>("get_initial_file");
       if (initialFile) {
-        loadFileByPath(initialFile);
+        await loadFileByPath(initialFile);
       } else {
         await restoreLatestDraftIfAny();
       }
@@ -350,6 +431,12 @@ const App: Component = () => {
       // Not running in Tauri (dev mode without backend)
     }
   };
+
+  createEffect(() => {
+    if (sourceMode()) {
+      setEditor(undefined);
+    }
+  });
 
   return (
     <div class="app-layout">
@@ -366,6 +453,7 @@ const App: Component = () => {
             <textarea
               class="source-editor"
               value={currentContent()}
+              placeholder="Start writing..."
               onInput={(e) => {
                 setCurrentContent(e.currentTarget.value);
                 setIsDirty(true);
@@ -373,10 +461,14 @@ const App: Component = () => {
               spellcheck={false}
             />
           }>
-            <MilkdownEditor
-              onContentChange={handleContentChange}
-              onEditorReady={handleEditorReady}
-            />
+            <Suspense fallback={<div class="editor-loading" aria-label="Loading editor" />}>
+              <MilkdownEditor
+                initialContent={currentContent()}
+                onContentChange={handleContentChange}
+                onEditorReady={handleEditorReady}
+                onEditorDispose={handleEditorDispose}
+              />
+            </Suspense>
           </Show>
         </div>
         <StatusBar />
