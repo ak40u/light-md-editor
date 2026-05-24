@@ -1,124 +1,142 @@
 # LightMD
 
-A lightweight, fast markdown editor. Windows-first, with macOS support. Built with Tauri and SolidJS.
+[![CI](https://github.com/ak40u/light-md-editor/actions/workflows/ci.yml/badge.svg)](https://github.com/ak40u/light-md-editor/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/ak40u/light-md-editor?sort=semver)](https://github.com/ak40u/light-md-editor/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-![LightMD](docs/screenshot.png)
+LightMD is a lightweight WYSIWYG Markdown editor for quick writing,
+editing, and reviewing `.md` files without opening a full IDE.
+
+It is built with Tauri, Rust, SolidJS, and Milkdown, with native file
+dialogs, Markdown file associations, draft recovery, and Mermaid diagram
+preview.
+
+![LightMD screenshot](docs/screenshot.png)
 
 ## Why
 
-VS Code is heavy for quick `.md` editing. Typora is paid. Most alternatives are either Electron-bloated or lack WYSIWYG. LightMD is a portable, native-speed markdown editor that starts in under 500ms and ships as a single ~11 MB `.exe`.
+Markdown editors often sit at one of two extremes: a full development
+environment that feels too heavy for a small edit, or a plain text editor
+that loses the structure of the document while you write.
 
-## Features
+LightMD is the middle path: fast to open, native-feeling on the desktop,
+and focused on the core Markdown workflow.
 
-- **Inline WYSIWYG editing** -- Milkdown/ProseMirror engine, edit rendered markdown directly
-- **Tiny and fast** -- ~11 MB portable `.exe`, sub-500ms startup, minimal memory footprint
-- **Dark theme** -- "Fluent Obsidian" design, easy on the eyes
-- **Native file dialogs** -- open, save, save-as via OS-native dialogs
-- **Drag and drop** -- drop `.md` files onto the window to open them
-- **File association** -- registers `.md` and `.markdown` extensions on Windows and macOS (Finder / `open` / Apple Events)
-- **Recent files sidebar** -- quick access to recently opened documents
-- **Formatting toolbar** -- headings, bold, italic, strikethrough, code, lists, tables, links, images
-- **Source mode** -- toggle between WYSIWYG and raw markdown with Ctrl+/
-- **Keyboard shortcuts** -- standard editor shortcuts (Ctrl+S, Ctrl+O, Ctrl+N, Ctrl+B, Ctrl+I, etc.)
-- **Single instance mode** -- opening a second file focuses the running instance
-- **CommonMark + GFM** -- tables, task lists, strikethrough, code blocks
-- **Mermaid diagrams** -- live WYSIWYG preview for ` ```mermaid ` blocks with fullscreen, zoom/pan, and clipboard export (SVG/PNG)
-- **Auto-save drafts** -- untitled documents are persisted to the app data dir as you type; the most recent draft is restored on next launch
+## Highlights
 
-## Tech Stack
+- **Inline WYSIWYG editing**: edit rendered Markdown directly with a
+  Milkdown / ProseMirror editor.
+- **Source mode**: switch to raw Markdown whenever precision matters.
+- **Fast startup path**: the app shell renders first; the heavier editor
+  stack, toolbar commands, and Mermaid fullscreen tools are loaded lazily.
+- **Blank new documents**: new files start empty, with a visual
+  placeholder instead of starter text inserted into the document.
+- **Native desktop workflow**: open, save, Save As, drag-and-drop, recent
+  files, single-instance handoff, and `.md` / `.markdown` file association.
+- **Draft recovery**: untitled documents are auto-saved after idle time
+  and restored on next launch.
+- **Mermaid diagrams**: live preview for fenced `mermaid` blocks, plus
+  fullscreen zoom/pan and SVG / PNG clipboard export.
+- **CommonMark + GFM**: headings, lists, tables, task lists,
+  strikethrough, code blocks, links, and images.
+- **Security-conscious rendering**: Mermaid SVG output is sanitized, and
+  the app uses a strict Content Security Policy.
 
-| Layer    | Technology                        |
-| -------- | --------------------------------- |
-| Runtime  | Tauri 2 (Rust)                    |
-| Frontend | SolidJS 1.9, TypeScript, Vite 6  |
-| Editor   | Milkdown 7 (ProseMirror)          |
-| Styling  | Tailwind CSS 4                    |
-| Backend  | Rust (file I/O, recent files, single instance) |
-| Webview  | WebView2 (Windows) / WKWebView (macOS) |
+## Install
 
-## Getting Started
+### macOS
 
-### Prerequisites
+Download the latest macOS build from
+[Releases](https://github.com/ak40u/light-md-editor/releases/latest).
 
-- [Node.js](https://nodejs.org/) 18+
-- [Rust](https://www.rust-lang.org/tools/install) (stable toolchain)
-- [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (pre-installed on Windows 10/11) — Windows builds only
-- Xcode Command Line Tools — macOS builds only
+For Apple Silicon Macs, download the `LightMD_*_aarch64.dmg` asset.
 
-### Install
+After installing, macOS can use LightMD as the default editor for
+`.md` and `.markdown` files.
+
+### Build From Source
+
+Prerequisites:
+
+- Node.js 18+
+- Rust stable
+- Xcode Command Line Tools on macOS
+- WebView2 on Windows
 
 ```bash
 git clone https://github.com/ak40u/light-md-editor.git
 cd light-md-editor
 npm install
-```
-
-### Development
-
-```bash
-npm run tauri dev
-```
-
-### Build
-
-```bash
 npm run tauri build
 ```
 
-Build artefacts land in `src-tauri/target/release/bundle/` — `.exe` and `.msi` on Windows, `.app` and `.dmg` on macOS.
+Build artifacts are written to:
 
-### Platform notes
+```text
+src-tauri/target/release/bundle/
+```
 
-| Platform | Binary size | File association | Drag & drop | Single instance |
-| -------- | ----------- | ---------------- | ----------- | --------------- |
-| Windows  | ~11 MB      | `.md`, `.markdown` | yes | yes |
-| macOS    | ~6 MB       | `.md`, `.markdown` via Finder / `open` / Apple Events | yes | yes |
+## Development
 
-Linux is not officially supported yet — builds should work, but file
-association and DMG packaging are Windows/macOS-only.
+```bash
+npm install
+npm run typecheck
+npm run tauri dev
+```
+
+Useful commands:
+
+| Command | Purpose |
+| --- | --- |
+| `npm run typecheck` | Type-check the Solid / TypeScript frontend |
+| `npm run build` | Build the frontend with Vite |
+| `npm run tauri dev` | Run the desktop app in development mode |
+| `npm run tauri build` | Create release bundles |
 
 ## Keyboard Shortcuts
 
-On macOS, `Cmd` substitutes for `Ctrl`.
+Use `Cmd` on macOS and `Ctrl` on Windows / Linux.
 
-| Shortcut         | Action                          |
-| ---------------- | ------------------------------- |
-| `Ctrl + N`       | New file                        |
-| `Ctrl + O`       | Open file                       |
-| `Ctrl + S`       | Save file                       |
-| `Ctrl + Shift+S` | Save As (always prompts)        |
-| `Ctrl + R`       | Reload current file from disk   |
-| `Ctrl + B`       | Bold                            |
-| `Ctrl + I`       | Italic                          |
-| `Ctrl + E`       | Inline code                     |
-| `Ctrl + Z`       | Undo                            |
-| `Ctrl + Shift+Z` | Redo                            |
-| `Ctrl + /`       | Toggle source mode              |
-| `Ctrl + \`       | Toggle sidebar                  |
-| `Ctrl + +` / `=` | Zoom editor text in             |
-| `Ctrl + -`       | Zoom editor text out            |
-| `Ctrl + 0`       | Reset editor zoom               |
+| Shortcut | Action |
+| --- | --- |
+| `Cmd/Ctrl + N` | New document |
+| `Cmd/Ctrl + O` | Open file |
+| `Cmd/Ctrl + S` | Save |
+| `Cmd/Ctrl + Shift + S` | Save As |
+| `Cmd/Ctrl + R` | Reload current file from disk |
+| `Cmd/Ctrl + /` | Toggle source mode |
+| `Cmd/Ctrl + \` | Toggle sidebar |
+| `Cmd/Ctrl + +` / `=` | Increase editor zoom |
+| `Cmd/Ctrl + -` | Decrease editor zoom |
+| `Cmd/Ctrl + 0` | Reset editor zoom |
 
 ## Architecture
 
-```
-+----------------------------------------------------------+
-|  LightMD                                                 |
-|                                                          |
-|  +-------------------+    IPC (invoke)    +------------+ |
-|  |   Rust Backend    | <================> |  WebView2  | |
-|  |   (Tauri 2)       |                    |            | |
-|  |                   |                    |  SolidJS   | |
-|  |  - File I/O       |    Events          |  Milkdown  | |
-|  |  - Recent files   | =================> |  Tailwind  | |
-|  |  - Single instance|  (open-file, etc.) |            | |
-|  |  - CLI args        |                    |            | |
-|  |  - Drag & drop     |                    |            | |
-|  +-------------------+                    +------------+ |
-+----------------------------------------------------------+
-```
+LightMD is a small desktop application with a native Rust shell and a
+webview frontend.
 
-The Rust backend handles all filesystem operations and OS integration. The SolidJS frontend renders the UI and the Milkdown editor. Communication happens through Tauri's IPC (`invoke` for commands, `emit`/`listen` for events).
+| Layer | Technology | Responsibility |
+| --- | --- | --- |
+| Desktop runtime | Tauri 2 | App lifecycle, windows, bundling |
+| Backend | Rust | File I/O, recent files, drafts, OS events |
+| Frontend | SolidJS, TypeScript, Vite | App state and UI |
+| Editor | Milkdown, ProseMirror | WYSIWYG Markdown editing |
+| Markdown | CommonMark, GFM | Markdown features and serialization |
+| Diagrams | Mermaid, DOMPurify | Diagram rendering and SVG sanitization |
+| Styling | Tailwind CSS 4, custom CSS | Dark desktop UI |
+
+The frontend talks to Rust through Tauri IPC commands. File association,
+drag-and-drop, and single-instance handoff are normalized into the same
+open-file event path.
+
+## Project Status
+
+LightMD is an active personal desktop-app project. The current release is
+focused on macOS, while the codebase keeps Windows support in scope through
+Tauri and CI checks.
+
+See [docs/project-changelog.md](docs/project-changelog.md) for release
+history.
 
 ## License
 
